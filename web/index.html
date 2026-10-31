@@ -1,188 +1,23 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0a1019">
-<title>Network — Cellular Intelligence</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#080d15"><title>Network — Cellular Diagnostics</title>
 <style>
-:root{color-scheme:dark;--bg:#080d15;--panel:#101a27;--panel2:#152334;--line:#26374a;--muted:#91a4b8;--text:#edf5fc;--green:#54e0a0;--blue:#71b7ff;--amber:#ffc66d;--red:#ff8585}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(900px 500px at 80% -10%,#17314a 0%,transparent 65%),var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-main{max-width:1120px;margin:auto;padding:22px 16px 60px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px}.brand{display:flex;align-items:center;gap:12px}.logo{width:42px;height:42px;border:1px solid #31506a;border-radius:14px;display:grid;place-items:center;background:linear-gradient(145deg,#193b50,#102030);font-size:21px}.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--green);font-weight:800}.brand h1{font-size:20px;margin:0;letter-spacing:.02em}.sub{color:var(--muted);font-size:12px}.status{border:1px solid var(--line);border-radius:999px;padding:7px 11px;font-size:12px;color:var(--muted);white-space:nowrap}.status.live{color:var(--green);border-color:#27684f}.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin:18px 0 20px}.hero h2{font-size:clamp(25px,5vw,38px);line-height:1.1;margin:0 0 8px}.hero p{margin:0;color:var(--muted);max-width:620px}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.card{background:linear-gradient(155deg,rgba(21,35,52,.97),rgba(13,23,35,.97));border:1px solid var(--line);border-radius:17px;padding:16px;min-width:0;box-shadow:0 12px 30px #0002}.metric .label,.field label{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);display:block}.metric strong{display:block;font-size:clamp(20px,3vw,29px);margin-top:7px;overflow-wrap:anywhere}.metric small{color:var(--muted)}.section{margin-top:15px}.section h3{font-size:15px;margin:0 0 12px}.split{display:grid;grid-template-columns:1.2fr .8fr;gap:12px}.rows{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field{min-width:0}.field output{display:block;margin-top:4px;color:var(--text);overflow-wrap:anywhere;font-size:13px}.muted{color:var(--muted)}.toolbar{display:flex;flex-wrap:wrap;gap:9px;margin:16px 0}.btn{background:#1c3348;border:1px solid #35536e;color:var(--text);border-radius:11px;padding:10px 14px;font:inherit;font-weight:650;cursor:pointer}.btn.primary{background:#14533f;border-color:#287b5b}.btn:disabled{opacity:.45;cursor:not-allowed}input{width:100%;background:#09121d;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:11px;font:inherit;outline:none}input:focus{border-color:var(--blue)}.cell{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:9px;background:#0b1521}.cellhead{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px}.pill{font-size:10px;border-radius:999px;padding:3px 8px;background:#1d3a31;color:var(--green)}.map{min-height:185px;display:grid;place-items:center;text-align:center;background:linear-gradient(135deg,#0b1925,#102a36);border:1px dashed #34566b;border-radius:14px;padding:18px}.map a{color:var(--blue)}.notice{font-size:12px;color:var(--muted);border-left:2px solid var(--amber);padding-left:10px}.footer{color:#71869a;font-size:11px;text-align:center;margin-top:25px}.hidden{display:none!important}
-@media(max-width:760px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.split{grid-template-columns:1fr}.hero{display:block}.status{display:inline-block;margin-top:12px}}
-@media(max-width:420px){main{padding:16px 12px 40px}.card{padding:13px}.rows{grid-template-columns:1fr}.brand h1{font-size:17px}}
-</style>
-</head>
-<body>
-<main>
-<header class="top">
- <div class="brand"><div class="logo">⌁</div><div><div class="eyebrow">NETWORK INTELLIGENCE</div><h1>Cellular Diagnostics</h1></div></div>
- <div id="connectionStatus" class="status">Checking connection…</div>
-</header>
-<section class="hero">
- <div><h2>Know your network.</h2><p>Live cellular radio information from your Android device, plus IP and connectivity diagnostics. Actual fields depend on your phone, Android release and carrier.</p></div>
- <div class="sub" id="updated">Waiting for device data</div>
-</section>
-<div class="grid">
- <div class="card metric"><span class="label">Radio technology</span><strong id="radio">—</strong><small id="operator">Operator unavailable</small></div>
- <div class="card metric"><span class="label">Serving cell ID</span><strong id="cellId">—</strong><small id="cellType">No native cell data</small></div>
- <div class="card metric"><span class="label">Signal · RSRP</span><strong id="rsrp">—</strong><small id="rsrpHint">Requires supported radio data</small></div>
- <div class="card metric"><span class="label">Network RTT</span><strong id="rtt">—</strong><small>Browser estimate</small></div>
-</div>
-<section class="section split">
- <div class="card">
-  <h3>Device & operator</h3>
-  <div class="rows">
-   <div class="field"><label>Manufacturer / model</label><output id="device">Browser only</output></div>
-   <div class="field"><label>Android / OS</label><output id="os">—</output></div>
-   <div class="field"><label>Operator</label><output id="opName">—</output></div>
-   <div class="field"><label>MCC / MNC</label><output id="mccmnc">—</output></div>
-   <div class="field"><label>Network type</label><output id="networkType">—</output></div>
-   <div class="field"><label>Data connection</label><output id="dataState">—</output></div>
-  </div>
- </div>
- <div class="card">
-  <h3>Internet & browser</h3>
-  <div class="rows">
-   <div class="field"><label>Public IP</label><output id="publicIp">Not queried</output></div>
-   <div class="field"><label>Approx. ISP</label><output id="isp">—</output></div>
-   <div class="field"><label>Effective connection</label><output id="effective">—</output></div>
-   <div class="field"><label>Downlink estimate</label><output id="downlink">—</output></div>
-   <div class="field"><label>Browser / platform</label><output id="browser">—</output></div>
-   <div class="field"><label>Screen</label><output id="screen">—</output></div>
-  </div>
-  <div class="toolbar"><button class="btn" id="ipBtn">Check public IP</button><button class="btn" id="pingBtn">Measure RTT</button></div>
- </div>
-</section>
-<section class="section card">
- <h3>SIM cards in this device</h3>
- <p class="sub">Each active SIM/eSIM is listed separately. Android and the modem may limit per-SIM radio details; the default data SIM is marked.</p>
- <div id="simCards" class="muted">Waiting for Android SIM information…</div>
-</section>
-<section class="section card">
- <h3>Serving cell · default data SIM</h3>
- <div id="servingDetails" class="rows"><div class="muted">Connect this page through the Network Android app and grant permissions to read cellular information.</div></div>
- <div class="toolbar"><button class="btn" id="refreshBtn">Refresh device data</button><span class="sub" id="permissionHint">Native Android bridge not detected</span></div>
-</section>
-<section class="section card">
- <h3>Neighboring / visible cells</h3>
- <div id="neighborCells" class="muted">No native cell data available.</div>
-</section>
-<section class="section split">
- <div class="card">
-  <h3>Tower lookup</h3>
-  <p class="sub">Look up the serving cell in OpenCelliD. Coordinates are database estimates, not guaranteed exact mast locations.</p>
-  <div class="field"><label for="apiKey">Your OpenCelliD API key</label><input id="apiKey" type="password" autocomplete="off" placeholder="Enter your API key"></div>
-  <div class="toolbar"><button class="btn primary" id="lookupBtn">Look up serving cell</button><button class="btn" id="clearKey">Clear key</button></div>
-  <div id="towerResult" class="muted">No tower lookup performed.</div>
- </div>
- <div class="card">
-  <h3>Tower map</h3>
-  <div id="map" class="map"><div><div style="font-size:30px">⌖</div><strong>Awaiting tower coordinates</strong><p class="sub">A map link appears when the database returns coordinates.</p></div></div>
- </div>
-</section>
-<p class="notice section">Privacy: this dashboard does not send your cell data to a personal server. When you request a tower lookup, the selected cell identifiers and your API key are sent to OpenCelliD. The API key is stored only in this browser's local storage until cleared.</p>
-<div class="footer">NETWORK DIAGNOSTICS · Values may be unavailable or restricted by Android and the carrier.</div>
-</main>
-<script>
-(() => {
- const $ = id => document.getElementById(id);
- let latest = null;
- const val = v => (v === null || v === undefined || v === "" || v === 2147483647 || v === 2147483646 || v === -2147483648) ? "Unavailable" : String(v);
- const put = (id,v) => { $(id).textContent = val(v); };
- const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
- put("effective", conn?.effectiveType || "Not exposed");
- put("downlink", conn?.downlink != null ? conn.downlink + " Mbps" : "Not exposed");
- put("browser", navigator.userAgent);
- put("screen", `${screen.width} × ${screen.height} · DPR ${devicePixelRatio}`);
- $("connectionStatus").textContent = navigator.onLine ? "ONLINE" : "OFFLINE";
- $("connectionStatus").classList.toggle("live", navigator.onLine);
- window.addEventListener("online",()=>{$("connectionStatus").textContent="ONLINE";$("connectionStatus").classList.add("live")});
- window.addEventListener("offline",()=>{$("connectionStatus").textContent="OFFLINE";$("connectionStatus").classList.remove("live")});
- function field(label,value){return `<div class="field"><label>${label}</label><output>${escapeHtml(val(value))}</output></div>`}
- function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
- function render(data){
-  latest=data;
-  if(!data){$("permissionHint").textContent="Native Android bridge not detected";return}
-  put("device",`${data.manufacturer||""} ${data.model||""}`.trim());
-  put("os",data.androidVersion); put("operator",data.operatorName); put("opName",data.operatorName);
-  put("mccmnc",`${data.mcc||"?"} / ${data.mnc||"?"}`);
-  put("networkType",data.dataNetworkTypeName); put("dataState",data.dataStateName);
-  const sims=data.sims||[];
-  $("simCards").innerHTML=sims.length?sims.map(sim=>{
-   const simCells=sim.cells||[], active=simCells.find(c=>c.registered)||simCells[0];
-   const title=sim.displayName||("SIM "+sim.slot);
-   return `<div class="cell"><div class="cellhead"><strong>${escapeHtml(title)}${sim.slot?` · Slot ${escapeHtml(sim.slot)}`:""}</strong><span class="pill">${sim.isDefaultData?"Default data SIM":"Active SIM"}</span></div><div class="rows">${field("Carrier",sim.carrierName||sim.operatorName)}${field("MCC / MNC",`${sim.mcc||"?"} / ${sim.mnc||"?"}`)}${field("Network type",sim.networkTypeName)}${field("Data state",sim.dataStateName)}${field("Serving cell",active?.cellId)}${field("Radio",active?.radio)}</div><div class="sub">${simCells.length?`${simCells.length} visible cell record(s) reported for this SIM`:"No per-SIM cell records exposed by Android"}</div></div>`;
-  }).join(""):"No active SIM information exposed. Check phone permissions and SIM status.";
-  const cells=data.cells||[], serving=cells.find(c=>c.registered)||cells[0];
-  put("radio",serving?.radio||data.dataNetworkTypeName||"—");
-  put("cellId",serving?.cellId); put("cellType",serving?`${serving.radio||"Cell"} · ${serving.registered?"Registered":"Not registered"}`:"No cell reported");
-  put("rsrp",serving?.rsrp!=null?`${serving.rsrp} dBm`:"—");
-  $("rsrpHint").textContent=serving?.rsrp!=null?"Serving cell signal measurement":"Not exposed by this device";
-  const detail=serving?[
-   ["Radio",serving.radio],["Registered",serving.registered],["MCC",serving.mcc],["MNC",serving.mnc],
-   ["Cell ID / CI / NCI",serving.cellId],["TAC / LAC",serving.tac],["PCI / PSC",serving.pci],
-   ["EARFCN / NRARFCN / ARFCN",serving.arfcn],["RSRP",serving.rsrp!=null?serving.rsrp+" dBm":null],
-   ["RSRQ",serving.rsrq!=null?serving.rsrq+" dB":null],["RSSI",serving.rssi!=null?serving.rssi+" dBm":null],
-   ["SINR / RSSNR",serving.sinr!=null?serving.sinr+" dB":null],["ASU level",serving.asuLevel]
-  ]:[];
-  $("servingDetails").innerHTML=detail.map(x=>field(x[0],x[1])).join("")||'<div class="muted">No serving cell information returned.</div>';
-  $("neighborCells").innerHTML=cells.length?cells.map((c,i)=>`<div class="cell"><div class="cellhead"><strong>${c.registered?"Serving cell":`Cell ${i+1}`}${c.simSlot?` · SIM slot ${escapeHtml(c.simSlot)}`:""}</strong><span class="pill">${escapeHtml(c.radio||"Unknown radio")}</span></div><div class="rows">${field("Cell ID",c.cellId)}${field("TAC / LAC",c.tac)}${field("PCI",c.pci)}${field("RSRP",c.rsrp!=null?c.rsrp+" dBm":null)}${field("RSRQ",c.rsrq!=null?c.rsrq+" dB":null)}${field("Channel",c.arfcn)}</div></div>`).join(""):"No cells returned. Check permissions, Location Services and SIM/network status.";
-  if(data.location?.latitude!=null && data.location?.longitude!=null){
-   const lat=Number(data.location.latitude), lon=Number(data.location.longitude);
-   if(Number.isFinite(lat)&&Number.isFinite(lon)){
-    $("map").innerHTML=`<div><div style="font-size:30px">⌖</div><strong>Phone location</strong><p>${lat.toFixed(6)}, ${lon.toFixed(6)}</p><p><a target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=${encodeURIComponent(lat)}&mlon=${encodeURIComponent(lon)}#map=16/${encodeURIComponent(lat)}/${encodeURIComponent(lon)}">Open phone location in OpenStreetMap ↗</a></p><p class="sub">This is your phone's GPS location, not the cell tower location.</p></div>`;
-   }
-  }
-  $("permissionHint").textContent="Connected to Android native collector";
-  $("updated").textContent="Updated "+new Date().toLocaleTimeString();
- }
- function refresh(){
-  try{
-   if(window.AndroidNetwork && typeof AndroidNetwork.getDiagnostics==="function"){
-    const d=JSON.parse(AndroidNetwork.getDiagnostics()); render(d);
-   }else{$("permissionHint").textContent="Open this page inside the Network Android app for cellular details."}
-  }catch(e){$("permissionHint").textContent="Could not read native data: "+e.message}
- }
- async function ping(){
-  const t=performance.now();
-  try{await fetch(location.href,{method:"HEAD",cache:"no-store"});put("rtt",Math.round(performance.now()-t)+" ms")}
-  catch(e){put("rtt","Failed")}
- }
- async function ip(){
-  $("publicIp").textContent="Checking…";
-  try{
-   const r=await fetch("https://ipapi.co/json/"); if(!r.ok)throw Error("IP lookup unavailable");
-   const d=await r.json(); put("publicIp",d.ip); put("isp",d.org||d.asn||"Unavailable");
-  }catch(e){$("publicIp").textContent="Lookup unavailable"}
- }
- $("refreshBtn").onclick=refresh; $("pingBtn").onclick=ping; $("ipBtn").onclick=ip;
- $("apiKey").value=localStorage.getItem("opencellid_key")||"";
- $("apiKey").addEventListener("change",()=>localStorage.setItem("opencellid_key",$("apiKey").value.trim()));
- $("clearKey").onclick=()=>{$("apiKey").value="";localStorage.removeItem("opencellid_key");$("towerResult").textContent="API key cleared."};
- $("lookupBtn").onclick=()=>{
-  const key=$("apiKey").value.trim();
-  if(!key){$("towerResult").textContent="Enter your OpenCelliD API key first.";return}
-  localStorage.setItem("opencellid_key",key);
-  if(!latest?.cells?.length){$("towerResult").textContent="No Android cell data available. Open this page in the app and refresh.";return}
-  const cell=latest.cells.find(c=>c.registered)||latest.cells[0];
-  if(!cell.mcc||!cell.mnc||!cell.tac||!cell.cellId){$("towerResult").textContent="The serving cell is missing one or more required lookup identifiers (MCC, MNC, TAC/LAC or Cell ID).";return}
-  if(!window.AndroidNetwork?.lookupTower){$("towerResult").textContent="Tower lookup requires the Android app bridge.";return}
-  $("lookupBtn").disabled=true;$("towerResult").textContent="Looking up cell in OpenCelliD…";
-  AndroidNetwork.lookupTower(key);
- };
- window.onTowerLookupResult = raw => {
-  $("lookupBtn").disabled=false;
-  try{
-   const d=typeof raw==="string"?JSON.parse(raw):raw;
-   if(!d.ok){$("towerResult").textContent=d.error||"No matching tower record found.";return}
-   const lat=Number(d.lat),lon=Number(d.lon);
-   if(!Number.isFinite(lat)||!Number.isFinite(lon))throw Error("Invalid coordinates returned");
-   $("towerResult").innerHTML=`<strong>Database match found</strong><p>Latitude: ${escapeHtml(lat)}<br>Longitude: ${escapeHtml(lon)}<br>Estimated range: ${escapeHtml(d.range??"Not supplied")} m<br>Samples: ${escapeHtml(d.samples??"Not supplied")}</p><p class="sub">Source: OpenCelliD · Coordinates are approximate database data, not verified exact mast coordinates.</p>`;
-   $("map").innerHTML=`<div><div style="font-size:30px">⌖</div><strong>${lat.toFixed(6)}, ${lon.toFixed(6)}</strong><p><a target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=${encodeURIComponent(lat)}&mlon=${encodeURIComponent(lon)}#map=16/${encodeURIComponent(lat)}/${encodeURIComponent(lon)}">Open tower location in OpenStreetMap ↗</a></p></div>`;
-  }catch(e){$("towerResult").textContent="Could not process lookup result: "+e.message}
- };
- refresh(); ping(); setInterval(refresh,5000);
+:root{color-scheme:dark;--bg:#080d15;--panel:#101a27;--panel2:#152334;--line:#26374a;--muted:#91a4b8;--text:#edf5fc;--green:#54e0a0;--blue:#71b7ff;--amber:#ffc66d}*{box-sizing:border-box}body{margin:0;background:radial-gradient(900px 500px at 80% -10%,#17314a 0%,transparent 65%),var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}main{max-width:1120px;margin:auto;padding:16px 14px 55px}.top{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0 14px;background:#080d15ed;backdrop-filter:blur(14px);border-bottom:1px solid #26374a}.brand{display:flex;align-items:center;gap:10px}.logo{width:40px;height:40px;border:1px solid #31506a;border-radius:13px;display:grid;place-items:center;background:linear-gradient(145deg,#193b50,#102030);font-size:20px}.eyebrow{font-size:10px;letter-spacing:.16em;color:var(--green);font-weight:800}.brand h1{font-size:18px;margin:0}.topactions{display:flex;align-items:center;gap:8px}.status{border:1px solid var(--line);border-radius:99px;padding:6px 9px;font-size:11px;color:var(--muted)}.status.live{color:var(--green);border-color:#27684f}.btn{background:#1c3348;border:1px solid #35536e;color:var(--text);border-radius:11px;padding:9px 12px;font:inherit;font-weight:650;cursor:pointer}.btn.primary{background:#14533f;border-color:#287b5b}.btn:disabled{opacity:.45}.hero{margin:20px 0}.hero h2{font-size:clamp(25px,5vw,36px);line-height:1.12;margin:0 0 8px}.hero p,.sub{color:var(--muted);font-size:13px}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.card{background:linear-gradient(155deg,rgba(21,35,52,.97),rgba(13,23,35,.97));border:1px solid var(--line);border-radius:16px;padding:15px;min-width:0;box-shadow:0 12px 30px #0002}.metric .label,.field label{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);display:block}.metric strong{display:block;font-size:clamp(19px,3vw,27px);margin-top:7px;overflow-wrap:anywhere}.metric small{color:var(--muted)}.section{margin-top:13px}.section h3{font-size:15px;margin:0 0 12px}.split{display:grid;grid-template-columns:1.1fr .9fr;gap:12px}.rows{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field{min-width:0}.field output{display:block;margin-top:4px;color:var(--text);overflow-wrap:anywhere;font-size:13px}.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:13px 0}.cell{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:9px;background:#0b1521}.cellhead{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px}.pill{font-size:10px;border-radius:99px;padding:3px 8px;background:#1d3a31;color:var(--green)}.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.tab{border:1px solid var(--line);border-radius:11px;padding:9px 13px;background:#101a27;color:var(--text);font:inherit;cursor:pointer}.tab.active{background:#14533f;border-color:#287b5b}.sim-page{display:none}.sim-page.active{display:block}.map{min-height:155px;display:grid;place-items:center;text-align:center;background:linear-gradient(135deg,#0b1925,#102a36);border:1px dashed #34566b;border-radius:14px;padding:16px}.map a{color:var(--blue)}input{width:100%;background:#09121d;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:11px;font:inherit}.notice{font-size:12px;color:var(--muted);border-left:2px solid var(--amber);padding-left:10px}.hidden{display:none!important}.empty{color:var(--muted);padding:8px 0}.stamp{font-size:11px;color:var(--muted)}
+@media(max-width:760px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.split{grid-template-columns:1fr}}@media(max-width:430px){main{padding:10px 11px 40px}.card{padding:12px}.rows{grid-template-columns:1fr}.brand h1{font-size:15px}.status{display:none}.btn{padding:8px 10px;font-size:13px}}
+</style></head><body><main>
+<header class="top"><div class="brand"><div class="logo">⌁</div><div><div class="eyebrow">NETWORK INTELLIGENCE</div><h1>Cellular Diagnostics</h1></div></div><div class="topactions"><span id="connectionStatus" class="status">Checking…</span><button class="btn primary" id="refreshAll">↻ Refresh all</button></div></header>
+<section class="hero"><h2>Live network information.</h2><p>Values below come from Android system APIs or are explicitly identified as external lookups. Unavailable fields remain unavailable; this app does not manufacture radio readings or tower coordinates.</p><div class="stamp" id="updated">Waiting for native device data</div></section>
+<div class="grid"><div class="card metric"><span class="label">Active data SIM</span><strong id="activeCarrier">—</strong><small id="activeNetwork">No active data details</small></div><div class="card metric"><span class="label">Serving cell ID</span><strong id="activeCell">—</strong><small id="activeRadio">No cell reported</small></div><div class="card metric"><span class="label">Signal · dBm</span><strong id="activeSignal">—</strong><small id="activeSignalType">No live measurement</small></div><div class="card metric"><span class="label">Collection status</span><strong id="collectStatus">—</strong><small id="collectTime">No refresh yet</small></div></div>
+<section class="section split"><div class="card"><h3>Device & active operator</h3><div id="deviceFields" class="rows"><div class="empty">Waiting for Android…</div></div></div><div class="card"><h3>Internet & browser</h3><div class="rows"><div class="field"><label>Public IP</label><output id="publicIp">Not queried</output></div><div class="field"><label>Approx. ISP / ASN</label><output id="isp">Not queried</output></div><div class="field"><label>Effective connection</label><output id="effective">Not exposed by browser</output></div><div class="field"><label>Downlink estimate</label><output id="downlink">Not exposed by browser</output></div><div class="field"><label>Browser / platform</label><output id="browser"></output></div><div class="field"><label>Screen</label><output id="screen"></output></div></div><div class="toolbar"><button class="btn" id="ipBtn">Check public IP</button><button class="btn" id="pingBtn">Measure RTT</button><span class="stamp" id="rtt">Not measured</span></div></div></section>
+<section class="section card"><h3>SIM cards detected</h3><p class="sub">Select a SIM to open its dedicated diagnostics page. Android may expose radio cells only for the currently registered modem/data subscription; shared cell records are not falsely assigned to another SIM.</p><div id="simTabs" class="tabs"><span class="empty">Waiting for SIM information…</span></div><div id="simSummary" class="empty">No SIM data collected yet.</div></section>
+<div id="simPages"></div>
+<p class="notice section">Accuracy: radio and SIM fields are read from Android Telephony APIs at refresh time. Android 12, Samsung firmware, carrier configuration and permissions determine which fields are exposed. Phone GPS coordinates are the phone's location, not a tower location. Cell-database coordinates are third-party records and are not guaranteed to be the exact physical mast.</p><div class="stamp" style="text-align:center;margin-top:22px">NETWORK DIAGNOSTICS · No fabricated cellular values</div>
+</main><script>
+(()=>{const $=id=>document.getElementById(id);let latest=null,activePage=0,refreshing=false;const unavailable=v=>v===null||v===undefined||v===''||v==='null';const show=v=>unavailable(v)?'Not available from device':String(v);const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));function field(k,v){return `<div class="field"><label>${esc(k)}</label><output>${esc(show(v))}</output></div>`}function fields(obj){return Object.entries(obj).map(([k,v])=>field(k,v)).join('')}function cellFields(c){if(!c)return '<div class="empty">Android did not return cell information for this SIM.</div>';const labels={radio:'Radio technology',registered:'Registered cell',cellId:'Cell identity (CI / NCI)',mcc:'MCC',mnc:'MNC',tac:'TAC / LAC',pci:'PCI / PSC / BSIC',arfcn:'EARFCN / NRARFCN / UARFCN / ARFCN',bandwidthKhz:'LTE bandwidth (kHz)',dbm:'Signal power (dBm)',signalLevel:'Android signal level',asuLevel:'ASU level',rsrp:'RSRP (dBm)',rsrq:'RSRQ (dB)',rssi:'RSSI (dBm)',sinr:'SINR / RSSNR (dB)',cqi:'CQI',timingAdvance:'Timing advance',csiRsrp:'CSI-RSRP (dBm)',csiRsrq:'CSI-RSRQ (dB)',csiSinr:'CSI-SINR (dB)'};return fields(Object.fromEntries(Object.entries(labels).map(([k,l])=>[l,c[k]])))}function simDetailPage(sim,index){const cells=sim.cells||[],serving=cells.find(c=>c.registered)||null;const towerId=`tower-${index}`,mapId=`map-${index}`;return `<section class="sim-page ${index===activePage?'active':''}" id="sim-page-${index}"><div class="card section"><div class="cellhead"><h3>${esc(sim.displayName||'SIM '+sim.slot)} · Slot ${esc(sim.slot)}</h3><span class="pill">${sim.isDefaultData?'Default data SIM':'SIM subscription'}</span></div><div class="rows">${fields({'Carrier name':sim.carrierName,'Operator name':sim.operatorName,'Subscription ID':sim.subscriptionId,'SIM state':sim.simState,'MCC':sim.mcc,'MNC':sim.mnc,'SIM country':sim.simCountryIso,'Network country':sim.networkCountryIso,'Network roaming':sim.isNetworkRoaming,'Voice network type':sim.voiceNetworkTypeName,'Data network type':sim.networkTypeName,'Data connection state':sim.dataStateName,'Data activity':sim.dataActivity,'Phone type':sim.phoneType})}</div></div><div class="card section"><h3>Serving cell · this subscription</h3>${cellFields(serving)}<div class="sub">${serving?'Native cell record returned by Android.':'No serving-cell record exposed for this subscription. The app will not copy another SIM\'s readings here.'}</div></div><div class="card section"><h3>All visible / neighboring cells returned</h3>${cells.length?cells.map((c,i)=>`<div class="cell"><div class="cellhead"><strong>${c.registered?'Registered cell':'Visible cell '+(i+1)}</strong><span class="pill">${esc(show(c.radio))}</span></div>${cellFields(c)}</div>`).join(''):'<div class="empty">No cell records returned by Android for this SIM.</div>'}</div><div class="card section"><h3>Tower database lookup</h3><p class="sub">Optional OpenCelliD lookup using this SIM's registered cell identifiers. Results are database coordinates, not guaranteed exact tower mast positions. The key is entered by you and is not embedded in this app.</p><div class="field"><label>OpenCelliD API key</label><input id="key-${index}" type="password" autocomplete="off" placeholder="Enter API key (optional)"></div><div class="toolbar"><button class="btn primary" id="lookup-${index}">Look up this SIM's cell</button></div><div id="result-${index}" class="sub">No lookup performed.</div><div id="${mapId}" class="map" style="margin-top:10px"><div class="empty">No tower coordinates returned.</div></div></div></section>`}
+function render(d){latest=d||null;if(!d){$('collectStatus').textContent='Failed';return}const sims=d.sims||[];const active=sims.find(s=>s.isDefaultData)||sims[0]||null;const activeCells=active?.cells||[];const serving=activeCells.find(c=>c.registered)||null;$('activeCarrier').textContent=show(active?.operatorName||active?.carrierName);$('activeNetwork').textContent=show(active?.networkTypeName);$('activeCell').textContent=show(serving?.cellId);$('activeRadio').textContent=show(serving?.radio);$('activeSignal').textContent=serving?.dbm!=null?serving.dbm+' dBm':'Not available';$('activeSignalType').textContent=serving?.radio||'No live measurement';$('collectStatus').textContent='Live read';$('collectTime').textContent='Native collection completed';$('deviceFields').innerHTML=fields({'Manufacturer':d.manufacturer,'Model':d.model,'Android version':d.androidVersion,'Android API level':d.sdkInt,'Active operator':active?.operatorName,'MCC / MNC':active?`${show(active.mcc)} / ${show(active.mnc)}`:null,'Data network':active?.networkTypeName,'Data state':active?.dataStateName,'Location permission':d.fineLocationGranted?'Precise location granted':'Not granted','Phone-state permission':d.phoneStateGranted?'Granted':'Not granted'});$('simTabs').innerHTML=sims.length?sims.map((s,i)=>`<button class="tab ${i===activePage?'active':''}" data-sim="${i}">${esc(s.carrierName||s.displayName||'SIM '+s.slot)} · SIM ${esc(s.slot)}</button>`).join(''):'<span class="empty">Android returned no active SIM subscriptions.</span>';$('simSummary').textContent=sims.length?`${sims.length} active subscription(s) reported by Android. Tap a SIM button to view its details.`:'No active SIM subscriptions reported.';$('simPages').innerHTML=sims.map(simDetailPage).join('');$('simPages').querySelectorAll('[data-sim]').forEach(()=>{});$('simTabs').querySelectorAll('[data-sim]').forEach(b=>b.onclick=()=>selectSim(Number(b.dataset.sim)));$('updated').textContent='Device data collected: '+new Date(d.collectedAtEpochMs||Date.now()).toLocaleString();$('connectionStatus').textContent=navigator.onLine?'ONLINE':'OFFLINE';$('connectionStatus').classList.toggle('live',navigator.onLine);sims.forEach((s,i)=>{const key=$('key-'+i);if(key)key.value=localStorage.getItem('opencellid_key_'+s.subscriptionId)||'';const btn=$('lookup-'+i);if(btn)btn.onclick=()=>lookupSim(i,s)});selectSim(Math.min(activePage,Math.max(0,sims.length-1)));}
+function selectSim(i){activePage=i;document.querySelectorAll('.sim-page').forEach((p,n)=>p.classList.toggle('active',n===i));document.querySelectorAll('.tab').forEach((b,n)=>b.classList.toggle('active',n===i));}
+function refresh(){if(refreshing)return;refreshing=true;$('refreshAll').disabled=true;$('collectStatus').textContent='Refreshing…';try{if(!window.AndroidNetwork?.getDiagnostics)throw Error('Open this dashboard inside the Network Android app.');const raw=AndroidNetwork.getDiagnostics();const d=JSON.parse(raw);if(d.error)throw Error(d.error);render(d)}catch(e){$('collectStatus').textContent='Unavailable';$('updated').textContent=e.message}finally{refreshing=false;$('refreshAll').disabled=false}}
+function lookupSim(i,sim){const key=$('key-'+i).value.trim(),result=$('result-'+i),btn=$('lookup-'+i);if(!key){result.textContent='An OpenCelliD API key is required for this optional database lookup.';return}const c=(sim.cells||[]).find(x=>x.registered);if(!c){result.textContent='No registered cell ID was exposed by Android for this SIM. No lookup can be made.';return}if(!c.mcc||!c.mnc||!c.tac||!c.cellId){result.textContent='Android did not expose all required identifiers for this SIM.';return}localStorage.setItem('opencellid_key_'+sim.subscriptionId,key);btn.disabled=true;result.textContent='Querying OpenCelliD…';AndroidNetwork.lookupTowerForCell(key,c.radio,c.mcc,c.mnc,c.tac,c.cellId,`result-${i}`,`map-${i}`)}
+window.onTowerLookupResult=(target,result,mapTarget)=>{const r=$(target),m=$(mapTarget);if(!r||!m)return;const lookupButton=$('lookup-'+String(target).split('-')[1]);if(lookupButton)lookupButton.disabled=false;try{const d=typeof result==='string'?JSON.parse(result):result;if(!d.ok){r.textContent=d.error||'No matching database record.';return}const lat=Number(d.lat),lon=Number(d.lon);if(!Number.isFinite(lat)||!Number.isFinite(lon))throw Error('Database returned invalid coordinates');r.innerHTML=`Database coordinates returned by ${esc(d.source||'external database')}: ${lat}, ${lon}. Estimated range: ${esc(d.range??'not supplied')} m. Samples: ${esc(d.samples??'not supplied')}.`;const q=encodeURIComponent(lat+','+lon);m.innerHTML=`<div><strong>${lat.toFixed(6)}, ${lon.toFixed(6)}</strong><p><a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${q}">Open coordinates in Google Maps ↗</a></p><p class="sub">Database estimate, not verified exact mast coordinates.</p></div>`}catch(e){r.textContent='Could not process database result: '+e.message}};
+$('refreshAll').onclick=refresh;$('ipBtn').onclick=async()=>{ $('publicIp').textContent='Looking up…';try{const r=await fetch('https://ipapi.co/json/');if(!r.ok)throw Error();const d=await r.json();$('publicIp').textContent=show(d.ip);$('isp').textContent=show(d.org||d.asn)}catch(e){$('publicIp').textContent='Lookup failed';$('isp').textContent='Unavailable'}};$('pingBtn').onclick=async()=>{const t=performance.now();try{await fetch(location.href,{method:'HEAD',cache:'no-store'});$('rtt').textContent=Math.round(performance.now()-t)+' ms (HTTP RTT)'}catch(e){$('rtt').textContent='Measurement failed'}};const cn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;$('effective').textContent=cn?.effectiveType||'Not exposed by browser';$('downlink').textContent=cn?.downlink!=null?cn.downlink+' Mbps':'Not exposed by browser';$('browser').textContent=navigator.userAgent;$('screen').textContent=`${screen.width} × ${screen.height} · DPR ${devicePixelRatio}`;window.addEventListener('online',()=>{$('connectionStatus').textContent='ONLINE';$('connectionStatus').classList.add('live')});window.addEventListener('offline',()=>{$('connectionStatus').textContent='OFFLINE';$('connectionStatus').classList.remove('live')});window.addEventListener('focus',refresh);refresh();setInterval(refresh,10000);
 })();
-</script>
-</body></html>
+</script></body></html>
