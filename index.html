@@ -55,7 +55,12 @@ main{max-width:1120px;margin:auto;padding:22px 16px 60px}.top{display:flex;align
  </div>
 </section>
 <section class="section card">
- <h3>Serving cell · radio measurements</h3>
+ <h3>SIM cards in this device</h3>
+ <p class="sub">Each active SIM/eSIM is listed separately. Android and the modem may limit per-SIM radio details; the default data SIM is marked.</p>
+ <div id="simCards" class="muted">Waiting for Android SIM information…</div>
+</section>
+<section class="section card">
+ <h3>Serving cell · default data SIM</h3>
  <div id="servingDetails" class="rows"><div class="muted">Connect this page through the Network Android app and grant permissions to read cellular information.</div></div>
  <div class="toolbar"><button class="btn" id="refreshBtn">Refresh device data</button><span class="sub" id="permissionHint">Native Android bridge not detected</span></div>
 </section>
@@ -103,6 +108,12 @@ main{max-width:1120px;margin:auto;padding:22px 16px 60px}.top{display:flex;align
   put("os",data.androidVersion); put("operator",data.operatorName); put("opName",data.operatorName);
   put("mccmnc",`${data.mcc||"?"} / ${data.mnc||"?"}`);
   put("networkType",data.dataNetworkTypeName); put("dataState",data.dataStateName);
+  const sims=data.sims||[];
+  $("simCards").innerHTML=sims.length?sims.map(sim=>{
+   const simCells=sim.cells||[], active=simCells.find(c=>c.registered)||simCells[0];
+   const title=sim.displayName||("SIM "+sim.slot);
+   return `<div class="cell"><div class="cellhead"><strong>${escapeHtml(title)}${sim.slot?` · Slot ${escapeHtml(sim.slot)}`:""}</strong><span class="pill">${sim.isDefaultData?"Default data SIM":"Active SIM"}</span></div><div class="rows">${field("Carrier",sim.carrierName||sim.operatorName)}${field("MCC / MNC",`${sim.mcc||"?"} / ${sim.mnc||"?"}`)}${field("Network type",sim.networkTypeName)}${field("Data state",sim.dataStateName)}${field("Serving cell",active?.cellId)}${field("Radio",active?.radio)}</div><div class="sub">${simCells.length?`${simCells.length} visible cell record(s) reported for this SIM`:"No per-SIM cell records exposed by Android"}</div></div>`;
+  }).join(""):"No active SIM information exposed. Check phone permissions and SIM status.";
   const cells=data.cells||[], serving=cells.find(c=>c.registered)||cells[0];
   put("radio",serving?.radio||data.dataNetworkTypeName||"—");
   put("cellId",serving?.cellId); put("cellType",serving?`${serving.radio||"Cell"} · ${serving.registered?"Registered":"Not registered"}`:"No cell reported");
@@ -116,7 +127,7 @@ main{max-width:1120px;margin:auto;padding:22px 16px 60px}.top{display:flex;align
    ["SINR / RSSNR",serving.sinr!=null?serving.sinr+" dB":null],["ASU level",serving.asuLevel]
   ]:[];
   $("servingDetails").innerHTML=detail.map(x=>field(x[0],x[1])).join("")||'<div class="muted">No serving cell information returned.</div>';
-  $("neighborCells").innerHTML=cells.length?cells.map((c,i)=>`<div class="cell"><div class="cellhead"><strong>${i===0&&c.registered?"Serving cell":`Cell ${i+1}`}</strong><span class="pill">${escapeHtml(c.radio||"Unknown radio")}</span></div><div class="rows">${field("Cell ID",c.cellId)}${field("TAC / LAC",c.tac)}${field("PCI",c.pci)}${field("RSRP",c.rsrp!=null?c.rsrp+" dBm":null)}${field("RSRQ",c.rsrq!=null?c.rsrq+" dB":null)}${field("Channel",c.arfcn)}</div></div>`).join(""):"No cells returned. Check permissions, Location Services and SIM/network status.";
+  $("neighborCells").innerHTML=cells.length?cells.map((c,i)=>`<div class="cell"><div class="cellhead"><strong>${c.registered?"Serving cell":`Cell ${i+1}`}${c.simSlot?` · SIM slot ${escapeHtml(c.simSlot)}`:""}</strong><span class="pill">${escapeHtml(c.radio||"Unknown radio")}</span></div><div class="rows">${field("Cell ID",c.cellId)}${field("TAC / LAC",c.tac)}${field("PCI",c.pci)}${field("RSRP",c.rsrp!=null?c.rsrp+" dBm":null)}${field("RSRQ",c.rsrq!=null?c.rsrq+" dB":null)}${field("Channel",c.arfcn)}</div></div>`).join(""):"No cells returned. Check permissions, Location Services and SIM/network status.";
   if(data.location?.latitude!=null && data.location?.longitude!=null){
    const lat=Number(data.location.latitude), lon=Number(data.location.longitude);
    if(Number.isFinite(lat)&&Number.isFinite(lon)){
