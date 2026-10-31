@@ -13,7 +13,7 @@ android {
         targetSdk 35
         versionCode 1
         versionName '1.0'
-        buildConfigField "String", "DASHBOARD_URL", "\"https://YOUR_GITHUB_USERNAME.github.io/network/\""
+        buildConfigField "String", "DASHBOARD_URL", "\"https://my7sql.github.io/network/\""
     }
 
     buildFeatures {
