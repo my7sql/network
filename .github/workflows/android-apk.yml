@@ -2,7 +2,7 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -11,6 +11,10 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -21,11 +25,22 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Android 35 platform and build tools
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      # Avoid android-actions/setup-android here: it attempts to install
+      # the retired SDK package "tools" and fails with "Failed to find package 'tools'".
+      - name: Install required Android SDK packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager 2>/dev/null | sort -V | tail -n 1)"
+          if [ -z "$SDKMANAGER" ]; then
+            echo "::error::Android sdkmanager was not found under $ANDROID_HOME/cmdline-tools"
+            exit 1
+          fi
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" --install \
+            "platform-tools" \
+            "platforms;android-35" \
+            "build-tools;35.0.0"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -36,8 +51,10 @@ jobs:
         working-directory: android
         run: gradle --no-daemon assembleDebug
 
-      - name: Rename APK
+      - name: Prepare APK
+        shell: bash
         run: |
+          set -euo pipefail
           mkdir -p release
           cp android/app/build/outputs/apk/debug/app-debug.apk release/network.apk
 
