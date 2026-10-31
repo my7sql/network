@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a1019">
+<title>Network — Cellular Intelligence</title>
+<style>
+:root{color-scheme:dark;--bg:#080d15;--panel:#101a27;--panel2:#152334;--line:#26374a;--muted:#91a4b8;--text:#edf5fc;--green:#54e0a0;--blue:#71b7ff;--amber:#ffc66d;--red:#ff8585}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(900px 500px at 80% -10%,#17314a 0%,transparent 65%),var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:1120px;margin:auto;padding:22px 16px 60px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px}.brand{display:flex;align-items:center;gap:12px}.logo{width:42px;height:42px;border:1px solid #31506a;border-radius:14px;display:grid;place-items:center;background:linear-gradient(145deg,#193b50,#102030);font-size:21px}.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--green);font-weight:800}.brand h1{font-size:20px;margin:0;letter-spacing:.02em}.sub{color:var(--muted);font-size:12px}.status{border:1px solid var(--line);border-radius:999px;padding:7px 11px;font-size:12px;color:var(--muted);white-space:nowrap}.status.live{color:var(--green);border-color:#27684f}.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin:18px 0 20px}.hero h2{font-size:clamp(25px,5vw,38px);line-height:1.1;margin:0 0 8px}.hero p{margin:0;color:var(--muted);max-width:620px}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.card{background:linear-gradient(155deg,rgba(21,35,52,.97),rgba(13,23,35,.97));border:1px solid var(--line);border-radius:17px;padding:16px;min-width:0;box-shadow:0 12px 30px #0002}.metric .label,.field label{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);display:block}.metric strong{display:block;font-size:clamp(20px,3vw,29px);margin-top:7px;overflow-wrap:anywhere}.metric small{color:var(--muted)}.section{margin-top:15px}.section h3{font-size:15px;margin:0 0 12px}.split{display:grid;grid-template-columns:1.2fr .8fr;gap:12px}.rows{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field{min-width:0}.field output{display:block;margin-top:4px;color:var(--text);overflow-wrap:anywhere;font-size:13px}.muted{color:var(--muted)}.toolbar{display:flex;flex-wrap:wrap;gap:9px;margin:16px 0}.btn{background:#1c3348;border:1px solid #35536e;color:var(--text);border-radius:11px;padding:10px 14px;font:inherit;font-weight:650;cursor:pointer}.btn.primary{background:#14533f;border-color:#287b5b}.btn:disabled{opacity:.45;cursor:not-allowed}input{width:100%;background:#09121d;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:11px;font:inherit;outline:none}input:focus{border-color:var(--blue)}.cell{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:9px;background:#0b1521}.cellhead{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px}.pill{font-size:10px;border-radius:999px;padding:3px 8px;background:#1d3a31;color:var(--green)}.map{min-height:185px;display:grid;place-items:center;text-align:center;background:linear-gradient(135deg,#0b1925,#102a36);border:1px dashed #34566b;border-radius:14px;padding:18px}.map a{color:var(--blue)}.notice{font-size:12px;color:var(--muted);border-left:2px solid var(--amber);padding-left:10px}.footer{color:#71869a;font-size:11px;text-align:center;margin-top:25px}.hidden{display:none!important}
+@media(max-width:760px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.split{grid-template-columns:1fr}.hero{display:block}.status{display:inline-block;margin-top:12px}}
+@media(max-width:420px){main{padding:16px 12px 40px}.card{padding:13px}.rows{grid-template-columns:1fr}.brand h1{font-size:17px}}
+</style>
+</head>
+<body>
+<main>
+<header class="top">
+ <div class="brand"><div class="logo">⌁</div><div><div class="eyebrow">NETWORK INTELLIGENCE</div><h1>Cellular Diagnostics</h1></div></div>
+ <div id="connectionStatus" class="status">Checking connection…</div>
+</header>
+<section class="hero">
+ <div><h2>Know your network.</h2><p>Live cellular radio information from your Android device, plus IP and connectivity diagnostics. Actual fields depend on your phone, Android release and carrier.</p></div>
+ <div class="sub" id="updated">Waiting for device data</div>
+</section>
+<div class="grid">
+ <div class="card metric"><span class="label">Radio technology</span><strong id="radio">—</strong><small id="operator">Operator unavailable</small></div>
+ <div class="card metric"><span class="label">Serving cell ID</span><strong id="cellId">—</strong><small id="cellType">No native cell data</small></div>
+ <div class="card metric"><span class="label">Signal · RSRP</span><strong id="rsrp">—</strong><small id="rsrpHint">Requires supported radio data</small></div>
+ <div class="card metric"><span class="label">Network RTT</span><strong id="rtt">—</strong><small>Browser estimate</small></div>
+</div>
+<section class="section split">
+ <div class="card">
+  <h3>Device & operator</h3>
+  <div class="rows">
+   <div class="field"><label>Manufacturer / model</label><output id="device">Browser only</output></div>
+   <div class="field"><label>Android / OS</label><output id="os">—</output></div>
+   <div class="field"><label>Operator</label><output id="opName">—</output></div>
+   <div class="field"><label>MCC / MNC</label><output id="mccmnc">—</output></div>
+   <div class="field"><label>Network type</label><output id="networkType">—</output></div>
+   <div class="field"><label>Data connection</label><output id="dataState">—</output></div>
+  </div>
+ </div>
+ <div class="card">
+  <h3>Internet & browser</h3>
+  <div class="rows">
+   <div class="field"><label>Public IP</label><output id="publicIp">Not queried</output></div>
+   <div class="field"><label>Approx. ISP</label><output id="isp">—</output></div>
+   <div class="field"><label>Effective connection</label><output id="effective">—</output></div>
+   <div class="field"><label>Downlink estimate</label><output id="downlink">—</output></div>
+   <div class="field"><label>Browser / platform</label><output id="browser">—</output></div>
+   <div class="field"><label>Screen</label><output id="screen">—</output></div>
+  </div>
+  <div class="toolbar"><button class="btn" id="ipBtn">Check public IP</button><button class="btn" id="pingBtn">Measure RTT</button></div>
+ </div>
+</section>
+<section class="section card">
+ <h3>Serving cell · radio measurements</h3>
+ <div id="servingDetails" class="rows"><div class="muted">Connect this page through the Network Android app and grant permissions to read cellular information.</div></div>
+ <div class="toolbar"><button class="btn" id="refreshBtn">Refresh device data</button><span class="sub" id="permissionHint">Native Android bridge not detected</span></div>
+</section>
+<section class="section card">
+ <h3>Neighboring / visible cells</h3>
+ <div id="neighborCells" class="muted">No native cell data available.</div>
+</section>
+<section class="section split">
+ <div class="card">
+  <h3>Tower lookup</h3>
+  <p class="sub">Look up the serving cell in OpenCelliD. Coordinates are database estimates, not guaranteed exact mast locations.</p>
+  <div class="field"><label for="apiKey">Your OpenCelliD API key</label><input id="apiKey" type="password" autocomplete="off" placeholder="Enter your API key"></div>
+  <div class="toolbar"><button class="btn primary" id="lookupBtn">Look up serving cell</button><button class="btn" id="clearKey">Clear key</button></div>
+  <div id="towerResult" class="muted">No tower lookup performed.</div>
+ </div>
+ <div class="card">
+  <h3>Tower map</h3>
+  <div id="map" class="map"><div><div style="font-size:30px">⌖</div><strong>Awaiting tower coordinates</strong><p class="sub">A map link appears when the database returns coordinates.</p></div></div>
+ </div>
+</section>
+<p class="notice section">Privacy: this dashboard does not send your cell data to a personal server. When you request a tower lookup, the selected cell identifiers and your API key are sent to OpenCelliD. The API key is stored only in this browser's local storage until cleared.</p>
+<div class="footer">NETWORK DIAGNOSTICS · Values may be unavailable or restricted by Android and the carrier.</div>
+</main>
+<script>
+(() => {
+ const $ = id => document.getElementById(id);
+ let latest = null;
+ const val = v => (v === null || v === undefined || v === "" || v === 2147483647 || v === 2147483646 || v === -2147483648) ? "Unavailable" : String(v);
+ const put = (id,v) => { $(id).textContent = val(v); };
+ const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+ put("effective", conn?.effectiveType || "Not exposed");
+ put("downlink", conn?.downlink != null ? conn.downlink + " Mbps" : "Not exposed");
+ put("browser", navigator.userAgent);
+ put("screen", `${screen.width} × ${screen.height} · DPR ${devicePixelRatio}`);
+ $("connectionStatus").textContent = navigator.onLine ? "ONLINE" : "OFFLINE";
+ $("connectionStatus").classList.toggle("live", navigator.onLine);
+ window.addEventListener("online",()=>{$("connectionStatus").textContent="ONLINE";$("connectionStatus").classList.add("live")});
+ window.addEventListener("offline",()=>{$("connectionStatus").textContent="OFFLINE";$("connectionStatus").classList.remove("live")});
+ function field(label,value){return `<div class="field"><label>${label}</label><output>${escapeHtml(val(value))}</output></div>`}
+ function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+ function render(data){
+  latest=data;
+  if(!data){$("permissionHint").textContent="Native Android bridge not detected";return}
+  put("device",`${data.manufacturer||""} ${data.model||""}`.trim());
+  put("os",data.androidVersion); put("operator",data.operatorName); put("opName",data.operatorName);
+  put("mccmnc",`${data.mcc||"?"} / ${data.mnc||"?"}`);
+  put("networkType",data.dataNetworkTypeName); put("dataState",data.dataStateName);
+  const cells=data.cells||[], serving=cells.find(c=>c.registered)||cells[0];
+  put("radio",serving?.radio||data.dataNetworkTypeName||"—");
+  put("cellId",serving?.cellId); put("cellType",serving?`${serving.radio||"Cell"} · ${serving.registered?"Registered":"Not registered"}`:"No cell reported");
+  put("rsrp",serving?.rsrp!=null?`${serving.rsrp} dBm`:"—");
+  $("rsrpHint").textContent=serving?.rsrp!=null?"Serving cell signal measurement":"Not exposed by this device";
+  const detail=serving?[
+   ["Radio",serving.radio],["Registered",serving.registered],["MCC",serving.mcc],["MNC",serving.mnc],
+   ["Cell ID / CI / NCI",serving.cellId],["TAC / LAC",serving.tac],["PCI / PSC",serving.pci],
+   ["EARFCN / NRARFCN / ARFCN",serving.arfcn],["RSRP",serving.rsrp!=null?serving.rsrp+" dBm":null],
+   ["RSRQ",serving.rsrq!=null?serving.rsrq+" dB":null],["RSSI",serving.rssi!=null?serving.rssi+" dBm":null],
+   ["SINR / RSSNR",serving.sinr!=null?serving.sinr+" dB":null],["ASU level",serving.asuLevel]
+  ]:[];
+  $("servingDetails").innerHTML=detail.map(x=>field(x[0],x[1])).join("")||'<div class="muted">No serving cell information returned.</div>';
+  $("neighborCells").innerHTML=cells.length?cells.map((c,i)=>`<div class="cell"><div class="cellhead"><strong>${i===0&&c.registered?"Serving cell":`Cell ${i+1}`}</strong><span class="pill">${escapeHtml(c.radio||"Unknown radio")}</span></div><div class="rows">${field("Cell ID",c.cellId)}${field("TAC / LAC",c.tac)}${field("PCI",c.pci)}${field("RSRP",c.rsrp!=null?c.rsrp+" dBm":null)}${field("RSRQ",c.rsrq!=null?c.rsrq+" dB":null)}${field("Channel",c.arfcn)}</div></div>`).join(""):"No cells returned. Check permissions, Location Services and SIM/network status.";
+  if(data.location?.latitude!=null && data.location?.longitude!=null){
+   const lat=Number(data.location.latitude), lon=Number(data.location.longitude);
+   if(Number.isFinite(lat)&&Number.isFinite(lon)){
+    $("map").innerHTML=`<div><div style="font-size:30px">⌖</div><strong>Phone location</strong><p>${lat.toFixed(6)}, ${lon.toFixed(6)}</p><p><a target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=${encodeURIComponent(lat)}&mlon=${encodeURIComponent(lon)}#map=16/${encodeURIComponent(lat)}/${encodeURIComponent(lon)}">Open phone location in OpenStreetMap ↗</a></p><p class="sub">This is your phone's GPS location, not the cell tower location.</p></div>`;
+   }
+  }
+  $("permissionHint").textContent="Connected to Android native collector";
+  $("updated").textContent="Updated "+new Date().toLocaleTimeString();
+ }
+ function refresh(){
+  try{
+   if(window.AndroidNetwork && typeof AndroidNetwork.getDiagnostics==="function"){
+    const d=JSON.parse(AndroidNetwork.getDiagnostics()); render(d);
+   }else{$("permissionHint").textContent="Open this page inside the Network Android app for cellular details."}
+  }catch(e){$("permissionHint").textContent="Could not read native data: "+e.message}
+ }
+ async function ping(){
+  const t=performance.now();
+  try{await fetch(location.href,{method:"HEAD",cache:"no-store"});put("rtt",Math.round(performance.now()-t)+" ms")}
+  catch(e){put("rtt","Failed")}
+ }
+ async function ip(){
+  $("publicIp").textContent="Checking…";
+  try{
+   const r=await fetch("https://ipapi.co/json/"); if(!r.ok)throw Error("IP lookup unavailable");
+   const d=await r.json(); put("publicIp",d.ip); put("isp",d.org||d.asn||"Unavailable");
+  }catch(e){$("publicIp").textContent="Lookup unavailable"}
+ }
+ $("refreshBtn").onclick=refresh; $("pingBtn").onclick=ping; $("ipBtn").onclick=ip;
+ $("apiKey").value=localStorage.getItem("opencellid_key")||"";
+ $("apiKey").addEventListener("change",()=>localStorage.setItem("opencellid_key",$("apiKey").value.trim()));
+ $("clearKey").onclick=()=>{$("apiKey").value="";localStorage.removeItem("opencellid_key");$("towerResult").textContent="API key cleared."};
+ $("lookupBtn").onclick=()=>{
+  const key=$("apiKey").value.trim();
+  if(!key){$("towerResult").textContent="Enter your OpenCelliD API key first.";return}
+  localStorage.setItem("opencellid_key",key);
+  if(!latest?.cells?.length){$("towerResult").textContent="No Android cell data available. Open this page in the app and refresh.";return}
+  const cell=latest.cells.find(c=>c.registered)||latest.cells[0];
+  if(!cell.mcc||!cell.mnc||!cell.tac||!cell.cellId){$("towerResult").textContent="The serving cell is missing one or more required lookup identifiers (MCC, MNC, TAC/LAC or Cell ID).";return}
+  if(!window.AndroidNetwork?.lookupTower){$("towerResult").textContent="Tower lookup requires the Android app bridge.";return}
+  $("lookupBtn").disabled=true;$("towerResult").textContent="Looking up cell in OpenCelliD…";
+  AndroidNetwork.lookupTower(key);
+ };
+ window.onTowerLookupResult = raw => {
+  $("lookupBtn").disabled=false;
+  try{
+   const d=typeof raw==="string"?JSON.parse(raw):raw;
+   if(!d.ok){$("towerResult").textContent=d.error||"No matching tower record found.";return}
+   const lat=Number(d.lat),lon=Number(d.lon);
+   if(!Number.isFinite(lat)||!Number.isFinite(lon))throw Error("Invalid coordinates returned");
+   $("towerResult").innerHTML=`<strong>Database match found</strong><p>Latitude: ${escapeHtml(lat)}<br>Longitude: ${escapeHtml(lon)}<br>Estimated range: ${escapeHtml(d.range??"Not supplied")} m<br>Samples: ${escapeHtml(d.samples??"Not supplied")}</p><p class="sub">Source: OpenCelliD · Coordinates are approximate database data, not verified exact mast coordinates.</p>`;
+   $("map").innerHTML=`<div><div style="font-size:30px">⌖</div><strong>${lat.toFixed(6)}, ${lon.toFixed(6)}</strong><p><a target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=${encodeURIComponent(lat)}&mlon=${encodeURIComponent(lon)}#map=16/${encodeURIComponent(lat)}/${encodeURIComponent(lon)}">Open tower location in OpenStreetMap ↗</a></p></div>`;
+  }catch(e){$("towerResult").textContent="Could not process lookup result: "+e.message}
+ };
+ refresh(); ping(); setInterval(refresh,5000);
+})();
+</script>
+</body></html>
