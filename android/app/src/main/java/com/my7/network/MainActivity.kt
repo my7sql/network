@@ -140,6 +140,21 @@ class MainActivity : Activity(), android.location.LocationListener {
                 sendTowerResult(result)
             }
         }
+
+        @JavascriptInterface
+        fun lookupTowerForCell(apiKey: String, radio: String, mcc: String, mnc: String, tac: String, cellId: String, resultElementId: String, mapElementId: String) {
+            if (apiKey.isBlank()) return
+            executor.execute {
+                val result = try { lookupOpenCellId(apiKey, radio, mcc, mnc, tac, cellId) }
+                catch (e: Exception) { JSONObject().put("ok", false).put("error", e.message ?: "Tower lookup failed") }
+                runOnUiThread {
+                    val encoded = JSONObject.quote(result.toString())
+                    val target = JSONObject.quote(resultElementId)
+                    val map = JSONObject.quote(mapElementId)
+                    webView.evaluateJavascript("window.onTowerLookupResult && window.onTowerLookupResult($target, $encoded, $map);", null)
+                }
+            }
+        }
     }
 
     private fun sendTowerResult(result: JSONObject) {
@@ -154,30 +169,133 @@ class MainActivity : Activity(), android.location.LocationListener {
         out.put("manufacturer", Build.MANUFACTURER)
         out.put("model", Build.MODEL)
         out.put("androidVersion", Build.VERSION.RELEASE)
-        val tm = getSystemService(TELEPHONY_SERVICE) as TelephonyManager
-        val operatorNumeric = try { tm.networkOperator ?: "" } catch (_: SecurityException) { "" }
-        out.put("operatorName", try { tm.networkOperatorName ?: "" } catch (_: SecurityException) { "" })
-        out.put("mcc", operatorNumeric.takeIf { it.length >= 5 }?.substring(0, 3) ?: JSONObject.NULL)
-        out.put("mnc", operatorNumeric.takeIf { it.length >= 5 }?.substring(3) ?: JSONObject.NULL)
-        out.put("dataNetworkTypeName", networkTypeName(try { tm.dataNetworkType } catch (_: SecurityException) { 0 }))
-        out.put("dataStateName", try {
-            when (tm.dataState) {
-                TelephonyManager.DATA_CONNECTED -> "Connected"
-                TelephonyManager.DATA_CONNECTING -> "Connecting"
-                TelephonyManager.DATA_DISCONNECTED -> "Disconnected"
-                TelephonyManager.DATA_SUSPENDED -> "Suspended"
-                else -> "Unknown"
-            }
-        } catch (_: SecurityException) { "Permission restricted" })
+        out.put("sdkInt", Build.VERSION.SDK_INT)
+        out.put("collectedAtEpochMs", System.currentTimeMillis())
+        out.put("fineLocationGranted", checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+        out.put("phoneStateGranted", checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED)
 
-        val cells = JSONArray()
-        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-            checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        val baseTm = getSystemService(TELEPHONY_SERVICE) as TelephonyManager
+        val defaultDataSubId = try {
+            SubscriptionManager.getDefaultDataSubscriptionId()
+        } catch (_: Exception) { SubscriptionManager.INVALID_SUBSCRIPTION_ID }
+
+        val simArray = JSONArray()
+        val allCells = JSONArray()
+        var defaultSim: JSONObject? = null
+
+        val activeSubscriptions = try {
+            if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+                SubscriptionManager.from(this).activeSubscriptionInfoList ?: emptyList()
+            } else emptyList()
+        } catch (_: SecurityException) { emptyList() }
+          catch (_: Exception) { emptyList() }
+
+        activeSubscriptions.forEach { sub ->
             try {
-                tm.allCellInfo?.forEach { info -> cells.put(cellToJson(info)) }
-            } catch (_: SecurityException) { }
+                val subTm = baseTm.createForSubscriptionId(sub.subscriptionId)
+                val operatorNumeric = try { subTm.networkOperator ?: "" } catch (_: SecurityException) { "" }
+                val simCells = JSONArray()
+
+                if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                    checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    try {
+                        subTm.allCellInfo?.forEach { info ->
+                            val cell = cellToJson(info)
+                            cell.put("simSlot", sub.simSlotIndex + 1)
+                            cell.put("subscriptionId", sub.subscriptionId)
+                            simCells.put(cell)
+                            allCells.put(cell)
+                        }
+                    } catch (_: SecurityException) { }
+                }
+
+                val sim = JSONObject()
+                    .put("slot", sub.simSlotIndex + 1)
+                    .put("subscriptionId", sub.subscriptionId)
+                    .put("displayName", sub.displayName?.toString() ?: "SIM ${sub.simSlotIndex + 1}")
+                    .put("carrierName", sub.carrierName?.toString() ?: "")
+                    .put("operatorName", try { subTm.networkOperatorName ?: "" } catch (_: SecurityException) { "" })
+                    .put("mcc", operatorNumeric.takeIf { it.length >= 5 }?.substring(0, 3) ?: JSONObject.NULL)
+                    .put("mnc", operatorNumeric.takeIf { it.length >= 5 }?.substring(3) ?: JSONObject.NULL)
+                    .put("networkTypeName", networkTypeName(try { subTm.dataNetworkType } catch (_: SecurityException) { 0 }))
+                    .put("dataStateName", try {
+                        when (subTm.dataState) {
+                            TelephonyManager.DATA_CONNECTED -> "Connected"
+                            TelephonyManager.DATA_CONNECTING -> "Connecting"
+                            TelephonyManager.DATA_DISCONNECTED -> "Disconnected"
+                            TelephonyManager.DATA_SUSPENDED -> "Suspended"
+                            else -> "Unknown"
+                        }
+                    } catch (_: SecurityException) { "Permission restricted" })
+                    .put("isDefaultData", sub.subscriptionId == defaultDataSubId)
+                    .put("simCountryIso", try { subTm.simCountryIso ?: "" } catch (_: SecurityException) { "" })
+                    .put("networkCountryIso", try { subTm.networkCountryIso ?: "" } catch (_: SecurityException) { "" })
+                    .put("isNetworkRoaming", try { subTm.isNetworkRoaming } catch (_: SecurityException) { JSONObject.NULL })
+                    .put("simState", simStateName(try { subTm.simState } catch (_: SecurityException) { TelephonyManager.SIM_STATE_UNKNOWN }))
+                    .put("voiceNetworkTypeName", networkTypeName(try { subTm.voiceNetworkType } catch (_: SecurityException) { 0 }))
+                    .put("phoneType", phoneTypeName(try { subTm.phoneType } catch (_: SecurityException) { 0 }))
+                    .put("dataActivity", dataActivityName(try { subTm.dataActivity } catch (_: SecurityException) { 0 }))
+                    .put("cells", simCells)
+
+                simArray.put(sim)
+                if (sub.subscriptionId == defaultDataSubId) defaultSim = sim
+            } catch (_: Exception) {
+                // One SIM can be restricted by the modem/carrier; continue collecting the other SIM.
+            }
         }
-        out.put("cells", cells)
+
+        // Some devices expose a single/default TelephonyManager even when subscription
+        // metadata is hidden. Keep a fallback so the dashboard still shows available data.
+        if (simArray.length() == 0) {
+            val operatorNumeric = try { baseTm.networkOperator ?: "" } catch (_: SecurityException) { "" }
+            val fallbackCells = JSONArray()
+            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                try {
+                    baseTm.allCellInfo?.forEach { info ->
+                        val cell = cellToJson(info)
+                        cell.put("simSlot", JSONObject.NULL)
+                        fallbackCells.put(cell)
+                        allCells.put(cell)
+                    }
+                } catch (_: SecurityException) { }
+            }
+            val fallback = JSONObject()
+                .put("slot", JSONObject.NULL)
+                .put("subscriptionId", JSONObject.NULL)
+                .put("displayName", "Default / SIM information restricted")
+                .put("carrierName", try { baseTm.networkOperatorName ?: "" } catch (_: SecurityException) { "" })
+                .put("operatorName", try { baseTm.networkOperatorName ?: "" } catch (_: SecurityException) { "" })
+                .put("mcc", operatorNumeric.takeIf { it.length >= 5 }?.substring(0, 3) ?: JSONObject.NULL)
+                .put("mnc", operatorNumeric.takeIf { it.length >= 5 }?.substring(3) ?: JSONObject.NULL)
+                .put("networkTypeName", networkTypeName(try { baseTm.dataNetworkType } catch (_: SecurityException) { 0 }))
+                .put("dataStateName", try {
+                    when (baseTm.dataState) {
+                        TelephonyManager.DATA_CONNECTED -> "Connected"
+                        TelephonyManager.DATA_CONNECTING -> "Connecting"
+                        TelephonyManager.DATA_DISCONNECTED -> "Disconnected"
+                        TelephonyManager.DATA_SUSPENDED -> "Suspended"
+                        else -> "Unknown"
+                    }
+                } catch (_: SecurityException) { "Permission restricted" })
+                .put("isDefaultData", true)
+                .put("cells", fallbackCells)
+            simArray.put(fallback)
+            defaultSim = fallback
+        }
+
+        val chosenSim = defaultSim ?: simArray.optJSONObject(0)
+        out.put("sims", simArray)
+        out.put("defaultDataSubscriptionId", if (defaultDataSubId == SubscriptionManager.INVALID_SUBSCRIPTION_ID) JSONObject.NULL else defaultDataSubId)
+        out.put("operatorName", chosenSim?.optString("operatorName", "") ?: "")
+        out.put("mcc", chosenSim?.opt("mcc") ?: JSONObject.NULL)
+        out.put("mnc", chosenSim?.opt("mnc") ?: JSONObject.NULL)
+        out.put("dataNetworkTypeName", chosenSim?.optString("networkTypeName", "Unknown") ?: "Unknown")
+        out.put("dataStateName", chosenSim?.optString("dataStateName", "Unknown") ?: "Unknown")
+
+        val selectedCells = chosenSim?.optJSONArray("cells") ?: JSONArray()
+        out.put("cells", selectedCells)
+        out.put("allCells", allCells)
         out.put("location", getPhoneLocation())
         return out
     }
@@ -223,7 +341,10 @@ class MainActivity : Activity(), android.location.LocationListener {
         o.put("rsrq", JSONObject.NULL)
         o.put("rssi", JSONObject.NULL)
         o.put("sinr", JSONObject.NULL)
-        o.put("asuLevel", try { info.cellSignalStrength.asuLevel } catch (_: Exception) { -1 })
+        o.put("asuLevel", safeInt(info.cellSignalStrength.asuLevel))
+        o.put("dbm", safeInt(info.cellSignalStrength.dbm))
+        o.put("signalLevel", safeInt(info.cellSignalStrength.level))
+        o.put("timestampNanos", info.timeStamp)
 
         when (info) {
             is CellInfoLte -> {
@@ -235,16 +356,20 @@ class MainActivity : Activity(), android.location.LocationListener {
                 o.put("mcc", id.mccString ?: JSONObject.NULL); o.put("mnc", id.mncString ?: JSONObject.NULL)
                 o.put("rsrp", safeInt(s.rsrp)); o.put("rsrq", safeInt(s.rsrq))
                 o.put("rssi", safeInt(s.rssi)); o.put("sinr", safeInt(s.rssnr))
+                o.put("cqi", safeInt(s.cqi)); o.put("timingAdvance", safeInt(s.timingAdvance))
+                o.put("bandwidthKhz", safeInt(id.bandwidth))
             }
             is CellInfoNr -> {
                 val id = info.cellIdentity as CellIdentityNr
                 val s = info.cellSignalStrength as CellSignalStrengthNr
                 o.put("radio", "NR / 5G")
-                o.put("cellId", id.nci.toString()); o.put("tac", safeInt(id.tac))
+                o.put("cellId", safeLong(id.nci)); o.put("tac", safeInt(id.tac))
                 o.put("pci", safeInt(id.pci)); o.put("arfcn", safeInt(id.nrarfcn))
                 o.put("mcc", id.mccString ?: JSONObject.NULL); o.put("mnc", id.mncString ?: JSONObject.NULL)
                 o.put("rsrp", safeInt(s.ssRsrp)); o.put("rsrq", safeInt(s.ssRsrq))
                 o.put("sinr", safeInt(s.ssSinr))
+                o.put("csiRsrp", safeInt(s.csiRsrp)); o.put("csiRsrq", safeInt(s.csiRsrq))
+                o.put("csiSinr", safeInt(s.csiSinr))
             }
             is CellInfoWcdma -> {
                 val id = info.cellIdentity
@@ -275,8 +400,39 @@ class MainActivity : Activity(), android.location.LocationListener {
         return o
     }
 
+    private fun simStateName(state: Int): String = when (state) {
+        TelephonyManager.SIM_STATE_ABSENT -> "Absent"
+        TelephonyManager.SIM_STATE_PIN_REQUIRED -> "PIN required"
+        TelephonyManager.SIM_STATE_PUK_REQUIRED -> "PUK required"
+        TelephonyManager.SIM_STATE_NETWORK_LOCKED -> "Network locked"
+        TelephonyManager.SIM_STATE_READY -> "Ready"
+        TelephonyManager.SIM_STATE_NOT_READY -> "Not ready"
+        TelephonyManager.SIM_STATE_PERM_DISABLED -> "Permanently disabled"
+        TelephonyManager.SIM_STATE_CARD_IO_ERROR -> "Card I/O error"
+        TelephonyManager.SIM_STATE_CARD_RESTRICTED -> "Card restricted"
+        else -> "Unknown"
+    }
+
+    private fun phoneTypeName(type: Int): String = when (type) {
+        TelephonyManager.PHONE_TYPE_GSM -> "GSM"
+        TelephonyManager.PHONE_TYPE_CDMA -> "CDMA"
+        TelephonyManager.PHONE_TYPE_SIP -> "SIP"
+        else -> "None / unknown"
+    }
+
+    private fun dataActivityName(activity: Int): String = when (activity) {
+        TelephonyManager.DATA_ACTIVITY_IN -> "Receiving"
+        TelephonyManager.DATA_ACTIVITY_OUT -> "Sending"
+        TelephonyManager.DATA_ACTIVITY_INOUT -> "Sending and receiving"
+        TelephonyManager.DATA_ACTIVITY_DORMANT -> "Dormant"
+        else -> "None"
+    }
+
     private fun safeInt(value: Int): Any =
         if (value == Int.MAX_VALUE || value == Int.MIN_VALUE || value < 0) JSONObject.NULL else value
+
+    private fun safeLong(value: Long): Any =
+        if (value == Long.MAX_VALUE || value == Long.MIN_VALUE || value < 0L) JSONObject.NULL else value
 
     private fun networkTypeName(type: Int): String = when (type) {
         TelephonyManager.NETWORK_TYPE_LTE -> "LTE / 4G"
@@ -295,20 +451,20 @@ class MainActivity : Activity(), android.location.LocationListener {
     private fun lookupOpenCellId(apiKey: String): JSONObject {
         val tm = getSystemService(TELEPHONY_SERVICE) as TelephonyManager
         val info = tm.allCellInfo?.firstOrNull { it.isRegistered } ?: tm.allCellInfo?.firstOrNull()
-            ?: return JSONObject().put("ok", false).put("error", "Android did not return a serving cell. Check permissions and Location Services.")
+            ?: return JSONObject().put("ok", false).put("error", "Android did not return a cell record.")
         val cell = cellToJson(info)
-        val radio = when (cell.optString("radio")) {
+        return lookupOpenCellId(apiKey, cell.optString("radio"), cell.optString("mcc"), cell.optString("mnc"), cell.optString("tac"), cell.optString("cellId"))
+    }
+
+    private fun lookupOpenCellId(apiKey: String, radioName: String, mcc: String, mnc: String, lac: String, cid: String): JSONObject {
+        val radio = when (radioName) {
             "LTE" -> "LTE"
-            "NR / 5G" -> "NR"
+            "NR / 5G", "NR" -> "NR"
             "WCDMA / 3G" -> "UMTS"
             "GSM / 2G" -> "GSM"
             "CDMA" -> "CDMA"
-            else -> return JSONObject().put("ok", false).put("error", "Unsupported or unknown radio type.")
+            else -> return JSONObject().put("ok", false).put("error", "Unsupported or unknown radio type: $radioName")
         }
-        val mcc = cell.optString("mcc")
-        val mnc = cell.optString("mnc")
-        val lac = cell.optString("tac")
-        val cid = cell.optString("cellId")
         if (listOf(mcc, mnc, lac, cid).any { it.isBlank() || it == "null" || it == "Unavailable" }) {
             return JSONObject().put("ok", false).put("error", "Serving cell is missing MCC, MNC, TAC/LAC or Cell ID.")
         }
